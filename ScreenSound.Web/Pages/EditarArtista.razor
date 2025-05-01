@@ -1,0 +1,87 @@
+﻿@page "/EditarArtista/{NomeArtista}"
+@inject ArtistaAPI artistaAPI
+@inject NavigationManager navigationManager
+
+<MudPaper Class="px-8 pt-2 pb-4 mx-12 my-8" Justify="Justify.Center">
+
+    <MudText Class="mt-8" Typo="Typo.h4">Editar Artista</MudText>
+
+    <MudForm>
+
+        <MudTextField Class="mt-4" T="string" Placeholder="Nome do Artista"
+        Variant="Variant.Outlined"
+        @bind-Value="nome"
+        Required="true"
+        RequiredError="Campo obrigatório." />
+
+        <MudTextField Class="mt-4" T="string" Placeholder="Biografia do artista"
+        Variant="Variant.Outlined"
+        @bind-Value="biografia"
+        Lines="4"
+        Required="true"
+        RequiredError="Campo obrigatório." />
+
+        <div class="d-flex align-center justify-space-between mt-4">
+            <MudButtonGroup Color="Color.Primary" Variant="Variant.Outlined" OverrideStyles="_overrideStyles" FullWidth>
+                <MudButton Variant="Variant.Outlined"
+                            StartIcon="@Icons.Material.Filled.Backspace"
+                            @onclick="Voltar"
+                            Color="Color.Default"
+                            Class="ml-auto">
+                            Voltar
+                </MudButton>
+
+                <MudButton Variant="Variant.Filled"
+                            StartIcon="@Icons.Material.Filled.Delete"
+                            @onclick="Excluir"
+                            Color="Color.Error"
+                            Class="ml-auto">
+                            Excluir
+                </MudButton>
+
+                <MudButton Variant="Variant.Filled"
+                            StartIcon="@Icons.Material.Filled.Send"
+                            @onclick="Editar"
+                            Color="Color.Success"
+                            Class="ml-auto">
+                            Salvar Alterações
+                </MudButton>
+            </MudButtonGroup>
+        </div>
+    </MudForm>
+</MudPaper>
+
+@code
+{
+    private string? nome;
+    private string? biografia;
+    [Parameter]
+    public string? NomeArtista { get; set; }
+    public ArtistaResponse? Artista { get; set; }
+    private bool _overrideStyles; // Para o MudButtonGroup
+
+    protected override async Task OnInitializedAsync()
+    {
+        Artista = await artistaAPI.GetArtistaPorNomeAsync(NomeArtista!);
+        nome = Artista!.Nome;
+        biografia = Artista!.Bio;
+    }
+
+    private async Task Excluir()
+    {
+        await artistaAPI.DeleteArtistaAsync(Artista!.Id);
+        navigationManager.NavigateTo("/Artistas");
+    }
+
+    private async Task Editar()
+    {
+        var requestEdit = new ArtistaRequestEdit(Artista!.Id, nome!, biografia!);
+        await artistaAPI.EditarArtistaAsync(requestEdit);
+        navigationManager.NavigateTo("/Artistas");
+    }
+
+    private void Voltar()
+    {
+        navigationManager.NavigateTo("/Artistas");
+    }
+}
