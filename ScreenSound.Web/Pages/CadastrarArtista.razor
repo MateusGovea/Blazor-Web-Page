@@ -9,34 +9,50 @@
     <MudForm>
 
         <MudTextField Class="mt-4" T="string" Placeholder="Nome do Artista"
-        Variant="Variant.Outlined"
-        @bind-Value="nome"
-        Required="true"
-        RequiredError="Campo obrigatório." />
+                    Variant="Variant.Outlined"
+                    @bind-Value="nome"
+                    Required="true"
+                    RequiredError="Campo obrigatório." />
 
         <MudTextField Class="mt-4" T="string" Placeholder="Biografia do artista"
-        Variant="Variant.Outlined"
-        @bind-Value="biografia"
-        Lines="4"
-        Required="true"
-        RequiredError="Campo obrigatório." />
+                    Variant="Variant.Outlined"
+                    @bind-Value="biografia"
+                    Lines="4"
+                    Required="true"
+                    RequiredError="Campo obrigatório." />
 
-        <div class="d-flex align-center justify-space-between mt-4">
-            <MudButton Variant="Variant.Filled"
-            @onclick="Cadastrar"
-            Color="Color.Primary"
-            Class="ml-auto">
-                Cadastrar
-            </MudButton>
+        <div class="align-center justify-space-between mt-3">
+            <MudImage Class="mt-4" src="@fileImage" />
+            <MudFileUpload T="IBrowserFile" Accept=".jpeg" FilesChanged="UploadFile">
+                <ActivatorContent>
+                    <MudButton HtmlTag="label"
+                                Variant="Variant.Filled"
+                                Color="Color.Primary"
+                                StartIcon="@Icons.Material.Filled.PhotoCamera">
+                                Foto de Perfil
+                    </MudButton>
+                </ActivatorContent>
+            </MudFileUpload>
         </div>
 
-        <div class="d-flex align-center justify-space-between mt-4">
-            <MudButton Variant="Variant.Filled"
-            @onclick="Voltar"
-            Color="Color.Secondary"
-            Class="ml-auto">
-                Voltar
-            </MudButton>
+        <div class="align-center justify-space-between mt-3">
+
+
+            <MudStack Justify="@_justify" Row="true">
+
+                <MudButton Variant="Variant.Filled"
+                            @onclick="Voltar"
+                            Color="Color.Secondary">
+                            Voltar
+                </MudButton>
+
+                <MudButton Variant="Variant.Filled"
+                            @onclick="Cadastrar"
+                            Color="Color.Primary">
+                            Cadastrar
+                </MudButton>
+
+            </MudStack>
         </div>
 
     </MudForm>
@@ -44,14 +60,31 @@
 
 @code 
 {
+    Justify _justify = Justify.FlexEnd;
+
     private string? nome;
     private string? biografia;
+
+    private string? fileImage;
 
     private async Task Cadastrar()
     {
         var request = new ArtistaRequest(nome!, biografia!);
         await artistaAPI.AddArtistaAsync(request);
         navigationManager.NavigateTo("/Artistas");
+    }
+
+    private async Task UploadFile(IBrowserFile file)
+    {
+        long maxFileSize = 1024 * 1024 * 15; // 15 MB
+        var format = "image/jpeg"; // Assuming JPEG format
+        var resizedImage = await file.RequestImageFileAsync(format, 200, 200); // Resizing to 200x200 pixels
+
+        using var fileStream = resizedImage.OpenReadStream(); // Open the file stream
+        using var memoryStream = new MemoryStream();         // Create a memory stream to hold the image data
+        await fileStream.CopyToAsync(memoryStream);         // Copy the file stream to the memory stream
+
+        fileImage = $"data:{format};base64,{Convert.ToBase64String(memoryStream.ToArray())}"; // Convert to base64 string
     }
 
     private void Voltar()
